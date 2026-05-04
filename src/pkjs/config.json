@@ -71,6 +71,13 @@
       },
       {
         "type": "toggle",
+        "messageKey": "SHOW_HR",
+        "label": "Heart Rate",
+        "description": "Shows BPM on models with a heart rate sensor",
+        "defaultValue": true
+      },
+      {
+        "type": "toggle",
         "messageKey": "USE_24H",
         "label": "24-Hour Format",
         "defaultValue": false
