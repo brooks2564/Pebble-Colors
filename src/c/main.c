@@ -145,15 +145,17 @@ static void layer_update(Layer *layer, GContext *ctx) {
   // Battery bar as horizontal line (gray track + colored fill)
   if (s_show_battery) {
     BatteryChargeState batt = battery_state_service_peek();
-    int fill_w = w * batt.charge_percent / 100;
+    int margin = 8;
+    int bar_w  = w - margin * 2;
+    int fill_w = bar_w * batt.charge_percent / 100;
     graphics_context_set_fill_color(ctx, GColorDarkGray);
-    graphics_fill_rect(ctx, GRect(0, y, w, 3), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(margin, y, bar_w, 3), 0, GCornerNone);
 #ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, batt.charge_percent > 20 ? accent : GColorRed);
 #else
     graphics_context_set_fill_color(ctx, GColorWhite);
 #endif
-    graphics_fill_rect(ctx, GRect(0, y, fill_w, 3), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(margin, y, fill_w, 3), 0, GCornerNone);
   }
   y += mid_h - 8; // advance past battery line + 6px gap
 
