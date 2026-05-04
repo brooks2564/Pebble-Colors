@@ -95,7 +95,7 @@ static void layer_update(Layer *layer, GContext *ctx) {
   }
   mask = health_service_metric_accessible(HealthMetricHeartRateBPM, time(NULL) - 60, time(NULL));
   if (mask & HealthServiceAccessibilityMaskAvailable) {
-    bpm = (int)health_service_peek_current_value(HealthMetricHeartRateBPM);
+    bpm = (int)health_service_sum_today(HealthMetricHeartRateBPM);
     if (bpm <= 0) bpm = -1;
   }
 #endif
