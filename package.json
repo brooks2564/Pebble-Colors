@@ -38,8 +38,7 @@
       "SHOW_DAY": 4,
       "USE_24H": 5,
       "AUTO_COLOR": 6,
-      "RAINBOW": 7,
-      "SHOW_HR": 8
+      "RAINBOW": 7
     },
     "resources": {
       "media": [

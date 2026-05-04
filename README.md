@@ -11,7 +11,6 @@ Pick a color, and the time displays in it. Or let it change automatically every 
 - **Rainbow mode** — cycles through all colors every minute
 - **Battery bar** — horizontal line between the time and date, fills left to right; gray track shows empty portion
 - **Step counter** — daily step count above the time; hidden at 0, shows `--` when unavailable
-- **Heart rate** — current BPM above the time on Pebble 2 and Pebble Time 2
 - **AM/PM indicator** — small label in the top-right corner in 12-hour mode
 - **Date & day of week** — uppercase display below the battery line (e.g. MON MAY 04)
 - **24-hour format** — optional toggle
@@ -29,7 +28,6 @@ Open the Pebble app → Colors → Settings to configure via the Clay settings p
 | Date | Show/hide the date |
 | Day of Week | Show/hide the day |
 | Step Counter | Show/hide daily steps |
-| Heart Rate | Show/hide BPM (Pebble 2 and Pebble Time 2 only) |
 | 24-Hour Format | Toggle 12h/24h time |
 
 ## Platforms

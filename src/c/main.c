@@ -23,7 +23,6 @@ static const uint8_t s_palette[NUM_COLORS] = {
 #define PKEY_AUTO        7
 #define PKEY_RAINBOW     8
 #define PKEY_COLOR_IDX   9
-#define PKEY_HR          10
 
 static Window    *s_window;
 static Layer     *s_layer;
@@ -37,7 +36,6 @@ static bool   s_show_battery;
 static bool   s_show_date;
 static bool   s_show_day;
 static bool   s_show_steps;
-static bool   s_show_hr;
 static bool   s_use_24h;
 
 static GColor color_at(int idx) {
@@ -60,7 +58,6 @@ static void load_settings(void) {
   s_use_24h      = persist_exists(PKEY_24H)      ? persist_read_bool(PKEY_24H)     : false;
   s_auto_color   = persist_exists(PKEY_AUTO)     ? persist_read_bool(PKEY_AUTO)    : false;
   s_rainbow      = persist_exists(PKEY_RAINBOW)  ? persist_read_bool(PKEY_RAINBOW) : false;
-  s_show_hr      = persist_exists(PKEY_HR)       ? persist_read_bool(PKEY_HR)      : true;
   // Apply fixed color choice when not in auto/rainbow mode
   if (!s_auto_color && !s_rainbow && persist_exists(PKEY_COLOR)) {
     int c = persist_read_int(PKEY_COLOR);
@@ -86,29 +83,21 @@ static void layer_update(Layer *layer, GContext *ctx) {
 
   // Gather health data up front
   int steps = -1;
-  int bpm   = -1;
 #ifdef PBL_HEALTH
   HealthServiceAccessibilityMask mask;
   mask = health_service_metric_accessible(HealthMetricStepCount, time(NULL) - 86400, time(NULL));
   if (mask & HealthServiceAccessibilityMaskAvailable) {
     steps = (int)health_service_sum_today(HealthMetricStepCount);
   }
-  mask = health_service_metric_accessible(HealthMetricHeartRateBPM, time(NULL) - 60, time(NULL));
-  if (mask & HealthServiceAccessibilityMaskAvailable) {
-    bpm = (int)health_service_sum_today(HealthMetricHeartRateBPM);
-    if (bpm <= 0) bpm = -1;
-  }
 #endif
 
   // Layout measurements — fixed spacing so toggling options doesn't shift the clock
-  int steps_h  = s_show_steps ? 18 : 0;
+  int steps_h   = s_show_steps ? 18 : 0;
   int steps_gap = s_show_steps ? 4  : 0;
-  int hr_h     = s_show_hr    ? 16 : 0;
-  int hr_gap   = s_show_hr    ? 4  : 0;
-  int time_h   = 50;
-  int mid_h    = 17; // fixed: 8px gap + 3px battery line + 6px gap
-  int date_h   = (s_show_date || s_show_day) ? 24 : 0;
-  int block_h  = steps_h + steps_gap + hr_h + hr_gap + time_h + mid_h + date_h;
+  int time_h    = 50;
+  int mid_h     = 17; // fixed: 8px gap + 3px battery line + 6px gap
+  int date_h    = (s_show_date || s_show_day) ? 24 : 0;
+  int block_h   = steps_h + steps_gap + time_h + mid_h + date_h;
   int y        = (h - block_h) / 2;
 
   // Steps — hide when 0 (space still reserved), show "--" when unavailable
@@ -127,19 +116,6 @@ static void layer_update(Layer *layer, GContext *ctx) {
         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     }
     y += steps_h + steps_gap;
-  }
-
-  // Heart rate — only shown on models with the sensor
-  if (s_show_hr) {
-    if (bpm > 0) {
-      char buf[12];
-      snprintf(buf, sizeof(buf), "%d BPM", bpm);
-      graphics_context_set_text_color(ctx, accent);
-      graphics_draw_text(ctx, buf, fonts_get_system_font(FONT_KEY_GOTHIC_14),
-        GRect(0, y, w, hr_h),
-        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-    }
-    y += hr_h + hr_gap;
   }
 
   // Time (large LECO digital font)
@@ -245,9 +221,6 @@ static void inbox_received(DictionaryIterator *iter, void *context) {
 
   t = dict_find(iter, MESSAGE_KEY_RAINBOW);
   if (t) { s_rainbow = t->value->int32; persist_write_bool(PKEY_RAINBOW, s_rainbow); }
-
-  t = dict_find(iter, MESSAGE_KEY_SHOW_HR);
-  if (t) { s_show_hr = t->value->int32; persist_write_bool(PKEY_HR, s_show_hr); }
 
   layer_mark_dirty(s_layer);
 }
