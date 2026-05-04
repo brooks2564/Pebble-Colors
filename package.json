@@ -1,0 +1,30 @@
+{
+  "name": "pebble-colors",
+  "author": "Brooman Inks",
+  "version": "2.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {
+    "pebble-clay": "*"
+  },
+  "pebble": {
+    "displayName": "Colors",
+    "uuid": "12450527-7532-4062-a4d9-eb481b0443a8",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": ["aplite", "basalt", "chalk", "diorite", "emery"],
+    "watchapp": { "watchface": true },
+    "capabilities": ["configurable", "health"],
+    "messageKeys": {
+      "COLOR":        0,
+      "SHOW_BATTERY": 1,
+      "SHOW_STEPS":   2,
+      "SHOW_DATE":    3,
+      "SHOW_DAY":     4,
+      "USE_24H":      5,
+      "AUTO_COLOR":   6,
+      "RAINBOW":      7
+    },
+    "resources": { "media": [] }
+  }
+}
