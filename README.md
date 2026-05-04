@@ -31,7 +31,7 @@ Open the Pebble app → Colors → Settings to configure via the Clay settings p
 
 ## Platforms
 
-Aplite · Basalt · Chalk · Diorite · Emery
+Aplite · Basalt · Chalk · Diorite · Emery · Flint · Gabbro
 
 ---
 
