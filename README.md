@@ -9,9 +9,9 @@ Pick a color, and the time displays in it. Or let it change automatically every 
 - **8 vivid accent colors** — Green, Cyan, Yellow, Orange, Red, Blue, White, Pink
 - **Hourly color change** — automatically cycles to the next color at the top of each hour
 - **Rainbow mode** — cycles through all colors every minute
-- **Battery bar** — thin colored strip at the top of the screen
-- **Step counter** — daily step count at the bottom
-- **Date & day of week** — clean, minimal display
+- **Battery bar** — horizontal line between the time and date, fills left to right
+- **Step counter** — daily step count displayed above the time
+- **Date & day of week** — uppercase display below the battery line (e.g. MON MAY 04)
 - **24-hour format** — optional toggle
 
 ## Settings
