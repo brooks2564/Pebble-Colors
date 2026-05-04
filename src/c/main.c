@@ -75,47 +75,43 @@ static void layer_update(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
-  // Battery bar (4px strip at top)
-  if (s_show_battery) {
-    BatteryChargeState batt = battery_state_service_peek();
-    int fill_w = w * batt.charge_percent / 100;
-    graphics_context_set_fill_color(ctx, GColorDarkGray);
-    graphics_fill_rect(ctx, GRect(0, 0, w, 4), 0, GCornerNone);
 #ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, batt.charge_percent > 20 ? s_accent : GColorRed);
+  GColor accent = s_accent;
 #else
-    graphics_context_set_fill_color(ctx, GColorWhite);
+  GColor accent = GColorWhite;
 #endif
-    graphics_fill_rect(ctx, GRect(0, 0, fill_w, 4), 0, GCornerNone);
-  }
 
-  int y = 10;
+  // Measure block height for vertical centering
+  int steps_h  = s_show_steps ? 18 : 0;
+  int steps_gap = s_show_steps ? 4 : 0;
+  int time_h   = 50;
+  int line_h   = 3;
+  int date_h   = (s_show_date || s_show_day) ? 24 : 0;
+  int date_gap = (s_show_date || s_show_day) ? 8 : 0;
+  int block_h  = steps_h + steps_gap + time_h + 8 + line_h + date_gap + date_h;
+  int y        = (h - block_h) / 2;
 
-  // Day of week
-  if (s_show_day) {
-    char buf[12];
-    strftime(buf, sizeof(buf), "%A", &s_now);
-    graphics_context_set_text_color(ctx, GColorWhite);
-    graphics_draw_text(ctx, buf,
-      fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
-      GRect(0, y, w, 22),
+  // Steps above time
+  if (s_show_steps) {
+#ifdef PBL_HEALTH
+    int steps = 0;
+    HealthServiceAccessibilityMask mask = health_service_metric_accessible(
+      HealthMetricStepCount, time(NULL) - 86400, time(NULL));
+    if (mask & HealthServiceAccessibilityMaskAvailable) {
+      steps = (int)health_service_sum_today(HealthMetricStepCount);
+    }
+    char steps_buf[20];
+    snprintf(steps_buf, sizeof(steps_buf), "%d STEPS", steps);
+    graphics_context_set_text_color(ctx, accent);
+    graphics_draw_text(ctx, steps_buf,
+      fonts_get_system_font(FONT_KEY_GOTHIC_14),
+      GRect(0, y, w, steps_h),
       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-    y += 23;
+#endif
+    y += steps_h + steps_gap;
   }
 
-  // Date
-  if (s_show_date) {
-    char buf[16];
-    strftime(buf, sizeof(buf), "%b %d", &s_now);
-    graphics_context_set_text_color(ctx, GColorLightGray);
-    graphics_draw_text(ctx, buf,
-      fonts_get_system_font(FONT_KEY_GOTHIC_18),
-      GRect(0, y, w, 22),
-      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-    y += 23;
-  }
-
-  // Time — vertically centered in remaining space above steps
+  // Time (large, centered)
   char time_buf[8];
   if (s_use_24h) {
     strftime(time_buf, sizeof(time_buf), "%H:%M", &s_now);
@@ -123,37 +119,50 @@ static void layer_update(Layer *layer, GContext *ctx) {
     strftime(time_buf, sizeof(time_buf), "%I:%M", &s_now);
     if (time_buf[0] == '0') memmove(time_buf, time_buf + 1, strlen(time_buf));
   }
-  int time_h = 52;
-  int bottom_reserve = s_show_steps ? 22 : 4;
-  int time_y = y + (h - bottom_reserve - y - time_h) / 2;
-  if (time_y < y) time_y = y;
-
-#ifdef PBL_COLOR
-  graphics_context_set_text_color(ctx, s_accent);
-#else
-  graphics_context_set_text_color(ctx, GColorWhite);
-#endif
+  graphics_context_set_text_color(ctx, accent);
   graphics_draw_text(ctx, time_buf,
-    fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD),
-    GRect(0, time_y, w, time_h + 4),
+    fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS),
+    GRect(0, y, w, time_h + 4),
     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+  y += time_h + 8;
 
-  // Step count
-  if (s_show_steps) {
-#ifdef PBL_HEALTH
-    HealthServiceAccessibilityMask mask = health_service_metric_accessible(
-      HealthMetricStepCount, time(NULL) - 86400, time(NULL));
-    if (mask & HealthServiceAccessibilityMaskAvailable) {
-      int steps = (int)health_service_sum_today(HealthMetricStepCount);
-      char buf[20];
-      snprintf(buf, sizeof(buf), "%d steps", steps);
-      graphics_context_set_text_color(ctx, GColorLightGray);
-      graphics_draw_text(ctx, buf,
-        fonts_get_system_font(FONT_KEY_GOTHIC_14),
-        GRect(0, h - 20, w, 16),
-        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+  // Horizontal accent line
+  graphics_context_set_fill_color(ctx, accent);
+  graphics_fill_rect(ctx, GRect(0, y, w, line_h), 0, GCornerNone);
+  y += line_h + date_gap;
+
+  // Date: "TUE MAR 17" — combined, uppercase
+  if (s_show_date || s_show_day) {
+    char date_buf[24];
+    if (s_show_day && s_show_date) {
+      strftime(date_buf, sizeof(date_buf), "%a %b %d", &s_now);
+    } else if (s_show_day) {
+      strftime(date_buf, sizeof(date_buf), "%A", &s_now);
+    } else {
+      strftime(date_buf, sizeof(date_buf), "%b %d", &s_now);
     }
+    for (int i = 0; date_buf[i]; i++) {
+      if (date_buf[i] >= 'a' && date_buf[i] <= 'z') date_buf[i] -= 32;
+    }
+    graphics_context_set_text_color(ctx, accent);
+    graphics_draw_text(ctx, date_buf,
+      fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
+      GRect(0, y, w, date_h),
+      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+  }
+
+  // Battery bar (thin strip at top)
+  if (s_show_battery) {
+    BatteryChargeState batt = battery_state_service_peek();
+    int fill_w = w * batt.charge_percent / 100;
+    graphics_context_set_fill_color(ctx, GColorDarkGray);
+    graphics_fill_rect(ctx, GRect(0, 0, w, 3), 0, GCornerNone);
+#ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx, batt.charge_percent > 20 ? accent : GColorRed);
+#else
+    graphics_context_set_fill_color(ctx, GColorWhite);
 #endif
+    graphics_fill_rect(ctx, GRect(0, 0, fill_w, 3), 0, GCornerNone);
   }
 }
 
